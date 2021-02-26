@@ -84,20 +84,31 @@ public class WorldInstantiationController : MonoBehaviour
         }
     }
 
+    //    public int depth = 20;
+    //    public int width = 256;
+    //    public int height = 256;
+    //    public float scale = 20f; 
+    //    public float offsetX = Random.Range(0f, 9999f);
+    //    public float offsetY = Random.Range(0f, 9999f);
+
     void TerrainInstantiation()
     {
         GameObject terrainParent = new GameObject();
         terrainParent.name = "Terrain";
         terrainParent.transform.parent = transform;
-        GameObject terrainInst = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        GameObject terrainInst = GameObject.CreatePrimitive(PrimitiveType.Cylinder); //the terrain itself? 
         Destroy(terrainInst.GetComponent<CapsuleCollider>());
         terrainInst.AddComponent<BoxCollider>();
         terrainInst.transform.localScale = new Vector3(terrainSize,1f,terrainSize);
         terrainInst.transform.parent = terrainParent.transform;
 
-        string dir = theme.ToString() + "/Terrains/" + theme.ToString();
+        string dir = theme.ToString() + "/Terrains/" + theme.ToString(); //!!!you need to name the asset inside the folder the theme
         Material terrainMat = LoadMaterial(dir);
         terrainInst.GetComponent<MeshRenderer>().material = terrainMat;
+
+
+        // terrainInst.terrainData = GenerateTerrain(terrain.terrainData);
+        // offsetX += Time.deltaTime * 5f;
 
         if(theme != Theme.Default)
         {
@@ -107,6 +118,32 @@ public class WorldInstantiationController : MonoBehaviour
         }
 
     }
+
+/////////////////////////////////////////////////////////////////////////////
+    // TerrainData GenerateTerrain(TerrainData terrainData){
+    //     terrainData.heightmapResolution = width + 1; 
+    //     terrainData.size = new Vector3 (width, depth, height);
+    //     terrainData.SetHeights(0, 0, GenerateHeights());
+    //     return terrainData;
+    // }
+
+    // float[,] GenerateHeights(){
+    //     float[,] heights = new float[width, height];
+    //     for (int x = 0; x < width; ++x){
+    //         for (int y = 0; y < height; ++y){
+    //             heights[x,y] = CalculateHeight(x,y);//PERLIN NOISE VAL HERE
+    //         }
+    //     }
+    //     return heights;
+    // }
+
+    // float CalculateHeight(int x, int y){
+    //     float xCor = (float)x/width * scale + offsetX;
+    //     float yCor = (float)y/height * scale + offsetY;
+
+    //     return Mathf.PerlinNoise(xCor, yCor);
+    // }
+////////////////////////////////////////////////////////////////////////////////////
 
     void ObjectsInstantiation(float minRange, float maxRange, float height, bool withinRadius, int objectsNumber, ObjectType type)
     {
