@@ -1,20 +1,29 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 using System.IO;
 
 public class WorldInstantiationController : MonoBehaviour
 {
-    public enum Theme
-    {
-        Default,
-        Forest,
-        Space,
-        Desert,
-        Lava
-    };
-    [Header("Theme")]
-    public Theme theme;
+
+    public int depth = 20;
+    public int width = 256;
+    public int height = 256;
+    public float scale = 20f; 
+    public float offsetX = 100f;
+    public float offsetY = 100f;
+
+    // public enum Theme
+    // {
+    //     Default,
+    //     Forest,
+    //     Space,
+    //     Desert,
+    //     Lava
+    // };
+    // [Header("Theme")]
+    // public Theme theme;
     [Header("Player Settings")]
     public float playerRange = 30f;
     [Header("Terrain Settings")]
@@ -50,7 +59,10 @@ public class WorldInstantiationController : MonoBehaviour
 
     private void Start()
     {
-        CheckIfDirectoryExist();
+        offsetX = Random.Range(0f, 9999f);
+        offsetY = Random.Range(0f, 9999f);
+
+        // CheckIfDirectoryExist();
 
         TerrainInstantiation();
 
@@ -76,20 +88,23 @@ public class WorldInstantiationController : MonoBehaviour
         return Resources.LoadAll<GameObject>(dir);
     }
 
-    void CheckIfDirectoryExist()
-    {
-        if (!Directory.Exists("Assets/Resources/" + theme.ToString()))
-        {
-            theme = Theme.Default;
-        }
-    }
+    // void CheckIfDirectoryExist()
+    // {
+    //     if (!Directory.Exists("Assets/Resources/" + theme.ToString()))
+    //     {
+    //         theme = Theme.Default;
+    //     }
+    // }
 
-    //    public int depth = 20;
-    //    public int width = 256;
-    //    public int height = 256;
-    //    public float scale = 20f; 
-    //    public float offsetX = Random.Range(0f, 9999f);
-    //    public float offsetY = Random.Range(0f, 9999f);
+
+    // void Update(){
+    //     GameObject terrain = GetComponent<Cylinder>();
+    //     terrain.GetComponent().terrainData = GenerateTerrain(terrain.GetComponent().terrainData);
+    //     offsetX += Time.deltaTime * 5f;
+    // }
+
+    private Object[] terrainMaterials; 
+    private Object[] skyMaterials;
 
     void TerrainInstantiation()
     {
@@ -102,54 +117,77 @@ public class WorldInstantiationController : MonoBehaviour
         terrainInst.transform.localScale = new Vector3(terrainSize,1f,terrainSize);
         terrainInst.transform.parent = terrainParent.transform;
 
-        string dir = theme.ToString() + "/Terrains/" + theme.ToString(); //!!!you need to name the asset inside the folder the theme
-        Material terrainMat = LoadMaterial(dir);
-        terrainInst.GetComponent<MeshRenderer>().material = terrainMat;
+
+        terrainMaterials = Resources.LoadAll("Terrains");
+
+        foreach (var t in terrainMaterials){
+            // Debug.Log(t.name);
+            Material terrainMat = (Material)t;
+            terrainInst.GetComponent<MeshRenderer>().material = terrainMat;
+        }
 
 
-        // terrainInst.terrainData = GenerateTerrain(terrain.terrainData);
-        // offsetX += Time.deltaTime * 5f;
+        // string dir = theme.ToString() + "/Terrains/" + theme.ToString(); //!!!you need to name the asset inside the folder the theme
+        // Material terrainMat = LoadMaterial(dir);
+        // terrainInst.GetComponent<MeshRenderer>().material = terrainMat;
+        TerrainData _TerrainData = new TerrainData();
+        TerrainCollider _TerrainCollider = terrainInst.AddComponent<TerrainCollider>();
 
-        if(theme != Theme.Default)
-        {
-            dir = theme.ToString() + "/Skyboxes/" + theme.ToString();
-            Material skyBox = LoadMaterial(dir);
+        Terrain terr = terrainInst.AddComponent<Terrain>();
+        terr.terrainData = _TerrainData;
+        terrainInst.GetComponent<Terrain>().terrainData = GenerateTerrain(terrainInst.GetComponent<Terrain>().terrainData);
+        offsetX += Time.deltaTime * 5f;
+
+
+        skyMaterials = Resources.LoadAll("Skyboxes");
+
+        foreach (var s in skyMaterials){
+            // Debug.Log(s.name);
+            Material skyBox = (Material)s;
             RenderSettings.skybox = skyBox;
         }
+
+        // if(theme != Theme.Default)
+        // {
+        //     string dir = theme.ToString() + "/Skyboxes/" + theme.ToString();
+        //     Material skyBox = LoadMaterial(dir);
+        //     RenderSettings.skybox = skyBox;
+        // }
 
     }
 
 /////////////////////////////////////////////////////////////////////////////
-    // TerrainData GenerateTerrain(TerrainData terrainData){
-    //     terrainData.heightmapResolution = width + 1; 
-    //     terrainData.size = new Vector3 (width, depth, height);
-    //     terrainData.SetHeights(0, 0, GenerateHeights());
-    //     return terrainData;
-    // }
+    TerrainData GenerateTerrain(TerrainData terrainData){
+        terrainData.heightmapResolution = width + 1; 
+        terrainData.size = new Vector3 (width, depth, height);
+        terrainData.SetHeights(0, 0, GenerateHeights());
+        return terrainData;
+    }
 
-    // float[,] GenerateHeights(){
-    //     float[,] heights = new float[width, height];
-    //     for (int x = 0; x < width; ++x){
-    //         for (int y = 0; y < height; ++y){
-    //             heights[x,y] = CalculateHeight(x,y);//PERLIN NOISE VAL HERE
-    //         }
-    //     }
-    //     return heights;
-    // }
+    float[,] GenerateHeights(){
+        float[,] heights = new float[width, height];
+        for (int x = 0; x < width; ++x){
+            for (int y = 0; y < height; ++y){
+                heights[x,y] = CalculateHeight(x,y);//PERLIN NOISE VAL HERE
+            }
+        }
+        return heights;
+    }
 
-    // float CalculateHeight(int x, int y){
-    //     float xCor = (float)x/width * scale + offsetX;
-    //     float yCor = (float)y/height * scale + offsetY;
+    float CalculateHeight(int x, int y){
+        float xCor = (float)x/width * scale + offsetX;
+        float yCor = (float)y/height * scale + offsetY;
 
-    //     return Mathf.PerlinNoise(xCor, yCor);
-    // }
+        return Mathf.PerlinNoise(xCor, yCor);
+    }
 ////////////////////////////////////////////////////////////////////////////////////
 
     void ObjectsInstantiation(float minRange, float maxRange, float height, bool withinRadius, int objectsNumber, ObjectType type)
     {
         //Load Objects
-        string dir = theme.ToString() + "/" + type.ToString();
-        GameObject[] objects = LoadGameobjects(dir);
+        // string dir = theme.ToString() + "/" + type.ToString();
+        // GameObject[] objects = LoadGameobjects(dir);
+        GameObject[] objects = LoadGameobjects(type.ToString());
 
         if(type == ObjectType.Backgrounds)
         {
@@ -179,6 +217,8 @@ public class WorldInstantiationController : MonoBehaviour
             GameObject newObject1;
             if (type == ObjectType.Foregrounds)
             {
+                //Random.range is a float? 
+                //console log it and see what the number is 
                 int a = Random.Range(0, objects.Length - 1);
                 newObject1 = (GameObject)Instantiate(objects[a], randomSpawnPosition1, Quaternion.Euler(randomSpawnRotation));
             }
